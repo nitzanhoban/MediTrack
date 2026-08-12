@@ -1,1 +1,25 @@
 CLAUDE.md
+
+# Dependencies
+node_modules/
+
+# Env
+.env
+.env.local
+*.env
+
+# Build output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
