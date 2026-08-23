@@ -16,10 +16,10 @@ export default function MedicationTile({ medication, onWithdraw, onRestock, onDe
   const styles = STATUS_STYLES[medication.status] || STATUS_STYLES.green;
 
   return (
-    <div className={`flex h-56 w-full flex-col justify-between rounded-xl border-2 p-4 shadow-sm ${styles}`}>
+    <div className={`flex min-h-56 w-full flex-col justify-between rounded-xl border-2 p-4 shadow-sm ${styles}`}>
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate text-2xl font-semibold leading-tight">{medication.name}</h3>
+          <h3 className="text-2xl font-semibold leading-tight break-words">{medication.name}</h3>
           <span className="shrink-0 rounded-full bg-white/60 px-3 py-1 text-sm font-medium text-center">
             {STATUS_LABEL[medication.status]}
           </span>
