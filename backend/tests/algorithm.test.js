@@ -1,4 +1,4 @@
-const { predictShortage } = require('../src/algorithm/shortagePrediction');
+const { predictShortage, STATUS_RULES } = require('../src/algorithm/shortagePrediction');
 
 describe('predictShortage', () => {
   test('red when out of stock, regardless of consumption history', () => {
@@ -36,5 +36,42 @@ describe('predictShortage', () => {
     // 30 units over 30 days -> 1/day. Stock 500 -> 500 days remaining.
     const result = predictShortage({ currentStock: 500, alertThresholdDays: 5, totalWithdrawn30d: 30 });
     expect(result.status).toBe('green');
+  });
+
+  describe('open/closed extensibility (STATUS_RULES)', () => {
+    // Proves a new status can be added by inserting a rule, with zero
+    // changes to predictShortage itself.
+    const ORIGINAL_RULES = [...STATUS_RULES];
+
+    afterEach(() => {
+      // Undo whatever a test spliced in, so rule order doesn't leak between tests.
+      STATUS_RULES.length = 0;
+      STATUS_RULES.push(...ORIGINAL_RULES);
+    });
+
+    test('inserting a new rule changes classification without touching predictShortage', () => {
+      // A hypothetical "orange" tier for critically-low-but-not-yet-yellow stock,
+      // inserted ahead of the existing rules.
+      STATUS_RULES.unshift({
+        status: 'orange',
+        matches: ({ currentStock }) => currentStock > 0 && currentStock < 2,
+      });
+
+      const result = predictShortage({ currentStock: 1, alertThresholdDays: 5, totalWithdrawn30d: 0 });
+      expect(result.status).toBe('orange');
+    });
+
+    test('existing statuses are unaffected when an unrelated rule is added', () => {
+      STATUS_RULES.unshift({
+        status: 'orange',
+        matches: ({ currentStock }) => currentStock > 0 && currentStock < 2,
+      });
+
+      const stillRed = predictShortage({ currentStock: 0, alertThresholdDays: 5, totalWithdrawn30d: 0 });
+      expect(stillRed.status).toBe('red');
+
+      const stillGreen = predictShortage({ currentStock: 500, alertThresholdDays: 5, totalWithdrawn30d: 30 });
+      expect(stillGreen.status).toBe('green');
+    });
   });
 });

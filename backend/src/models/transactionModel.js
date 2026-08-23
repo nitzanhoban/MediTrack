@@ -25,16 +25,4 @@ async function sumWithdrawals30d(medicationId) {
   return rows[0].total;
 }
 
-async function listForMedication(medicationId, { limit = 50 } = {}) {
-  const { rows } = await pool.query(
-    `SELECT transaction_id, medication_id, user_id, quantity, department, transaction_type, created_at
-     FROM withdrawal_transactions
-     WHERE medication_id = $1
-     ORDER BY created_at DESC
-     LIMIT $2`,
-    [medicationId, limit]
-  );
-  return rows;
-}
-
-module.exports = { insert, sumWithdrawals30d, listForMedication, WITHDRAWAL, RESTOCK };
+module.exports = { insert, sumWithdrawals30d, WITHDRAWAL, RESTOCK };
