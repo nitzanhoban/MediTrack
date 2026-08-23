@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import * as medsApi from '../api/medications';
 import MedicationTile from '../components/MedicationTile';
@@ -110,12 +110,6 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setCreateOpen(true)}
-              className="rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
-            >
-              New medication
-            </button>
-            <button
               onClick={() => logout()}
               className="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
             >
@@ -176,6 +170,14 @@ export default function DashboardPage() {
               <option value="yellow">Yellow — predicted shortage</option>
               <option value="red">Red — out of stock</option>
             </select>
+
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="ml-auto flex items-center justify-center gap-1.5 rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+            >
+              <PlusIcon className="h-4 w-4" />
+              New medication
+            </button>
           </div>
 
           <div className="scroll-pane -mr-2 overflow-y-auto pb-6 pr-2 lg:min-h-0 lg:flex-1">

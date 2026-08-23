@@ -18,7 +18,7 @@ export default function MedicationTile({ medication, onWithdraw, onRestock, onDe
       <div>
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-semibold leading-tight">{medication.name}</h3>
-          <span className="rounded-full bg-white/60 px-2 py-0.5 text-xs font-medium">
+          <span className="rounded-full bg-white/60 px-2 py-0.5 text-xs font-medium text-center">
             {STATUS_LABEL[medication.status]}
           </span>
         </div>
