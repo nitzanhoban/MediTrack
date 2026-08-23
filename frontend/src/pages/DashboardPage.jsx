@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
 
   const [department, setDepartment] = useState('');
+  const [search, setSearch] = useState('');
   const [stockModal, setStockModal] = useState(null); // { medication, mode: 'withdraw'|'restock' }
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -84,6 +85,12 @@ export default function DashboardPage() {
   const departments = departmentsQuery.data || [];
   const alerts = alertsQuery.data || [];
 
+  const filteredMedications = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return medications;
+    return medications.filter((m) => m.name.toLowerCase().includes(query));
+  }, [medications, search]);
+
   const activeMutation = useMemo(() => {
     if (stockModal?.mode === 'withdraw') return withdrawMutation;
     if (stockModal?.mode === 'restock') return restockMutation;
@@ -117,7 +124,19 @@ export default function DashboardPage() {
 
       <main className="mx-auto mt-6 flex max-w-6xl flex-col gap-6 px-4 lg:flex-row">
         <div className="flex-1">
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <label htmlFor="name-search" className="sr-only">
+              Search medications
+            </label>
+            <input
+              id="name-search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by medication name…"
+              className="w-56 rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            />
+
             <label htmlFor="dept-filter" className="text-sm font-medium text-slate-700">
               Department
             </label>
@@ -142,7 +161,7 @@ export default function DashboardPage() {
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {medications.map((med) => (
+            {filteredMedications.map((med) => (
               <MedicationTile
                 key={med.medicationId}
                 medication={med}
@@ -166,6 +185,9 @@ export default function DashboardPage() {
             <p className="mt-6 text-sm text-slate-500">
               No medications yet. Use "New medication" to add the first one.
             </p>
+          )}
+          {!medicationsQuery.isLoading && medications.length > 0 && filteredMedications.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No medications match "{search}".</p>
           )}
         </div>
 
