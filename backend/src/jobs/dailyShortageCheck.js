@@ -3,11 +3,6 @@ const medicationModel = require('../models/medicationModel');
 const transactionModel = require('../models/transactionModel');
 const { predictShortage } = require('../algorithm/shortagePrediction');
 
-/**
- * Periodic safety net (CLAUDE.md section 8): recomputes status for every
- * active medication once a day, independent of manual withdraw/restock
- * actions, so the 30-day window rolls forward even with no new transactions.
- */
 async function runDailyShortageCheck() {
   const meds = await medicationModel.listActive({});
   let changed = 0;
@@ -25,17 +20,15 @@ async function runDailyShortageCheck() {
     }
   }
 
-  // eslint-disable-next-line no-console
-  console.log(`[dailyShortageCheck] checked ${meds.length} medications, ${changed} status changes`);
+  console.log(`dailyShortageCheck- checked ${meds.length} medications, ${changed} status changes`);
   return { checked: meds.length, changed };
 }
 
-/** Schedules the job for 03:00 server time daily. Call once at startup. */
+/** Schedules the job for 03:00 daily. Call once at startup. */
 function scheduleDailyShortageCheck() {
   cron.schedule('0 3 * * *', () => {
     runDailyShortageCheck().catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error('[dailyShortageCheck] failed', err);
+      console.error('dailyShortageCheck failed', err);
     });
   });
 }

@@ -1,6 +1,5 @@
 const { verifyAccessToken } = require('../utils/tokens');
 
-/** Requires a valid Bearer access token. Attaches req.user = { id, username, role }. */
 function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const [scheme, token] = header.split(' ');
@@ -18,7 +17,6 @@ function requireAuth(req, res, next) {
   }
 }
 
-/** Restrict to specific roles. Use after requireAuth. */
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

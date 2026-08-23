@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal';
 
-/** Shared form for both Withdraw and Restock — CLAUDE.md describes both as
- * "select medication + quantity in the modal". */
 export default function StockChangeModal({ open, onClose, medication, mode, onSubmit, submitting, error }) {
   const [quantity, setQuantity] = useState('');
   const [department, setDepartment] = useState(medication?.department || '');

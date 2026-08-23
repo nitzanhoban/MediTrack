@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
     queryFn: medsApi.listAlerts,
-    refetchInterval: 60_000, // keep the alerts panel fresh without manual action
+    refetchInterval: 60_000, 
   });
 
   function invalidateAll() {

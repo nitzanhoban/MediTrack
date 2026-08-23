@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const { withTransaction } = require('../config/db');
 const medicationModel = require('../models/medicationModel');
 const transactionModel = require('../models/transactionModel');
-const { predictShortage } = require('../algorithm/shortagePrediction');
+const { predictShortage, StockStatus } = require('../algorithm/shortagePrediction');
 
 function serialize(med) {
   const prediction = predictShortage({
@@ -35,10 +35,9 @@ async function departments(req, res) {
   return res.json({ departments: depts });
 }
 
-/** Alerts panel: active medications currently in yellow or red. */
 async function alerts(req, res) {
   const meds = await medicationModel.listActive({});
-  const serialized = meds.map(serialize).filter((m) => m.status !== 'green');
+  const serialized = meds.map(serialize).filter((m) => m.status !== StockStatus.GREEN);
   return res.json({ alerts: serialized });
 }
 
@@ -54,7 +53,7 @@ async function create(req, res) {
     currentStock,
     alertThresholdDays,
     department: department || null,
-    status: currentStock <= 0 ? 'red' : 'green',
+    status: currentStock <= 0 ? StockStatus.RED : StockStatus.GREEN,
   });
 
   const full = await medicationModel.getActiveById(med.medication_id);
@@ -70,11 +69,7 @@ async function remove(req, res) {
   return res.status(204).send();
 }
 
-/**
- * Shared handler for withdraw/restock: locks the row, applies the quantity
- * delta, records a transaction, recomputes status, all inside one DB
- * transaction with rollback on failure (CLAUDE.md section 7).
- */
+
 async function applyStockChange(req, res, { type, sign }) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -108,7 +103,6 @@ async function applyStockChange(req, res, { type, sign }) {
         type,
       });
 
-      // total_withdrawn_30d must reflect the transaction we just inserted.
       const total30d = await transactionModel.sumWithdrawals30d(id);
       const prediction = predictShortage({
         currentStock: newStock,
