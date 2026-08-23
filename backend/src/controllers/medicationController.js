@@ -70,7 +70,7 @@ async function remove(req, res) {
 }
 
 
-async function applyStockChange(req, res, { type, sign, useRequestDepartment }) {
+async function applyStockChange(req, res, { type, sign }) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: 'Validation failed', details: errors.array() });
@@ -78,7 +78,6 @@ async function applyStockChange(req, res, { type, sign, useRequestDepartment }) 
 
   const { id } = req.params;
   const { quantity } = req.body;
-  const requestedDepartment = useRequestDepartment ? req.body.department : undefined;
 
   try {
     const updated = await withTransaction(async (client) => {
@@ -100,7 +99,7 @@ async function applyStockChange(req, res, { type, sign, useRequestDepartment }) 
         medicationId: id,
         userId: req.user.id,
         quantity,
-        department: requestedDepartment || med.department,
+        department: med.department,
         type,
       });
 
@@ -127,9 +126,7 @@ async function applyStockChange(req, res, { type, sign, useRequestDepartment }) 
   }
 }
 
-const withdraw = (req, res) =>
-  applyStockChange(req, res, { type: transactionModel.WITHDRAWAL, sign: -1, useRequestDepartment: false });
-const restock = (req, res) =>
-  applyStockChange(req, res, { type: transactionModel.RESTOCK, sign: 1, useRequestDepartment: true });
+const withdraw = (req, res) => applyStockChange(req, res, { type: transactionModel.WITHDRAWAL, sign: -1 });
+const restock = (req, res) => applyStockChange(req, res, { type: transactionModel.RESTOCK, sign: 1 });
 
 module.exports = { list, departments, alerts, create, remove, withdraw, restock, serialize };

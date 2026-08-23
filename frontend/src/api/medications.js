@@ -17,7 +17,5 @@ export const deleteMedication = (medicationId) =>
 export const withdrawMedication = (medicationId, quantity) =>
   api.post(`/medications/${medicationId}/withdraw`, { quantity }).then((res) => res.data.medication);
 
-export const restockMedication = (medicationId, quantity, department) =>
-  api
-    .post(`/medications/${medicationId}/restock`, { quantity, department })
-    .then((res) => res.data.medication);
+export const restockMedication = (medicationId, quantity) =>
+  api.post(`/medications/${medicationId}/restock`, { quantity }).then((res) => res.data.medication);

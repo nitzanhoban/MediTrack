@@ -33,7 +33,7 @@ router.post(
 
 router.post(
   '/:id/restock',
-  [param('id').isInt(), body('quantity').isInt({ min: 1 }), body('department').optional().trim()],
+  [param('id').isInt(), body('quantity').isInt({ min: 1 })],
   asyncHandler(medicationController.restock)
 );
 

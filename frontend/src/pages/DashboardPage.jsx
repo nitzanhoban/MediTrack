@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import MedicineBottleIcon from '../components/icons/MedicineBottleIcon';
 import { useAuth } from '../context/AuthContext';
 import * as medsApi from '../api/medications';
 import MedicationTile from '../components/MedicationTile';
@@ -54,7 +55,7 @@ export default function DashboardPage() {
   });
 
   const restockMutation = useMutation({
-    mutationFn: ({ id, quantity, dept }) => medsApi.restockMedication(id, quantity, dept),
+    mutationFn: ({ id, quantity }) => medsApi.restockMedication(id, quantity),
     onSuccess: () => {
       invalidateAll();
       setStockModal(null);
@@ -102,11 +103,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 pb-12 lg:h-screen lg:overflow-hidden lg:pb-0">
-      <header className="shrink-0 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">MediTrack Dashboard</h1>
-            <p className="text-xs text-slate-500">Signed in as {user?.username} ({user?.role})</p>
+      <header className="shrink-0 border-b border-slate-200 bg-white shadow-sm">
+        <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-sm">
+              <MedicineBottleIcon className="h-6 w-6" />
+            </span>
+            <div>
+              <h1 className="text-lg font-bold leading-tight tracking-tight text-slate-900">MediTrack</h1>
+              <p className="text-xs text-slate-500">Signed in as {user?.username} ({user?.role})</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -119,21 +125,21 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-6 lg:min-h-0 lg:flex-1 lg:flex-row">
+      <main className="flex w-full flex-col gap-6 px-4 pt-6 sm:px-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:px-8">
         <div className="flex flex-col lg:min-h-0 lg:flex-1">
           <div className="mb-5 shrink-0">
             <label htmlFor="name-search" className="sr-only">
               Search medications
             </label>
             <div className="relative">
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 id="name-search"
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by medication name…"
-                className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-4 text-lg shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
           </div>
@@ -186,7 +192,7 @@ export default function DashboardPage() {
               <p className="text-sm text-red-600">Failed to load medications. Try refreshing.</p>
             )}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filteredMedications.map((med) => (
                 <MedicationTile
                   key={med.medicationId}
@@ -231,12 +237,12 @@ export default function DashboardPage() {
         mode={stockModal?.mode}
         submitting={activeMutation?.isPending}
         error={actionError}
-        onSubmit={(quantity, dept) => {
+        onSubmit={(quantity) => {
           const id = stockModal.medication.medicationId;
           if (stockModal.mode === 'withdraw') {
             withdrawMutation.mutate({ id, quantity });
           } else {
-            restockMutation.mutate({ id, quantity, dept });
+            restockMutation.mutate({ id, quantity });
           }
         }}
       />

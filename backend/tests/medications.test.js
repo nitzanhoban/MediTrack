@@ -74,7 +74,7 @@ describe('Medications flow', () => {
     expect(res.body.medication.totalWithdrawn30d).toBe(10);
   });
 
-  test('withdraw ignores a department sent in the body and defaults to the medication\'s own department', async () => {
+  test('withdraw and restock both ignore a department sent in the body and default to the medication\'s own department', async () => {
     // Isolated medication so this doesn't perturb the stock/threshold numbers
     // the rest of this describe block depends on.
     const create = await auth(request(app).post('/api/medications')).send({
@@ -84,17 +84,24 @@ describe('Medications flow', () => {
     });
     const isolatedId = create.body.medication.medicationId;
 
-    const res = await auth(request(app).post(`/api/medications/${isolatedId}/withdraw`)).send({
+    const withdrawRes = await auth(request(app).post(`/api/medications/${isolatedId}/withdraw`)).send({
       quantity: 1,
       department: 'SomeOtherDept',
     });
-    expect(res.status).toBe(200);
+    expect(withdrawRes.status).toBe(200);
+
+    const restockRes = await auth(request(app).post(`/api/medications/${isolatedId}/restock`)).send({
+      quantity: 1,
+      department: 'SomeOtherDept',
+    });
+    expect(restockRes.status).toBe(200);
 
     const { rows } = await pool.query(
-      'SELECT department FROM withdrawal_transactions WHERE medication_id = $1 ORDER BY created_at DESC LIMIT 1',
+      'SELECT department FROM withdrawal_transactions WHERE medication_id = $1 ORDER BY created_at ASC',
       [isolatedId]
     );
-    expect(rows[0].department).toBe(DEPT);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.department === DEPT)).toBe(true);
 
     await pool.query('DELETE FROM withdrawal_transactions WHERE medication_id = $1', [isolatedId]);
     await pool.query('DELETE FROM medications WHERE medication_id = $1', [isolatedId]);
@@ -136,7 +143,6 @@ describe('Medications flow', () => {
   test('restock increases stock and can clear the yellow alert', async () => {
     const res = await auth(request(app).post(`/api/medications/${medicationId}/restock`)).send({
       quantity: 500,
-      department: DEPT,
     });
 
     expect(res.status).toBe(200);
@@ -155,7 +161,6 @@ describe('Medications flow', () => {
 
     await auth(request(app).post(`/api/medications/${medicationId}/restock`)).send({
       quantity: 1000,
-      department: DEPT,
     });
 
     alertsRes = await auth(request(app).get('/api/medications/alerts'));
