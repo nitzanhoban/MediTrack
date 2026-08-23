@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import * as medsApi from '../api/medications';
 import MedicationTile from '../components/MedicationTile';
@@ -124,19 +125,24 @@ export default function DashboardPage() {
 
       <main className="mx-auto mt-6 flex max-w-6xl flex-col gap-6 px-4 lg:flex-row">
         <div className="flex-1">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className="mb-5">
             <label htmlFor="name-search" className="sr-only">
               Search medications
             </label>
-            <input
-              id="name-search"
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by medication name…"
-              className="w-56 rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
+            <div className="relative">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-slate-400" />
+              <input
+                id="name-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by medication name…"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-4 text-lg shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+          </div>
 
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <label htmlFor="dept-filter" className="text-sm font-medium text-slate-700">
               Department
             </label>
