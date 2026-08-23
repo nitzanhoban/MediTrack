@@ -41,7 +41,7 @@ export default function DashboardPage() {
   }
 
   const withdrawMutation = useMutation({
-    mutationFn: ({ id, quantity, dept }) => medsApi.withdrawMedication(id, quantity, dept),
+    mutationFn: ({ id, quantity }) => medsApi.withdrawMedication(id, quantity),
     onSuccess: () => {
       invalidateAll();
       setStockModal(null);
@@ -182,7 +182,7 @@ export default function DashboardPage() {
         onSubmit={(quantity, dept) => {
           const id = stockModal.medication.medicationId;
           if (stockModal.mode === 'withdraw') {
-            withdrawMutation.mutate({ id, quantity, dept });
+            withdrawMutation.mutate({ id, quantity });
           } else {
             restockMutation.mutate({ id, quantity, dept });
           }

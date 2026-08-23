@@ -64,15 +64,40 @@ describe('Medications flow', () => {
     expect(res.body.medications.some((m) => m.medicationId === medicationId)).toBe(true);
   });
 
-  test('withdraw reduces stock and records a transaction', async () => {
+  test('withdraw reduces stock and records a transaction (no department in the request)', async () => {
     const res = await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 10,
-      department: DEPT,
     });
 
     expect(res.status).toBe(200);
     expect(res.body.medication.currentStock).toBe(20);
     expect(res.body.medication.totalWithdrawn30d).toBe(10);
+  });
+
+  test('withdraw ignores a department sent in the body and defaults to the medication\'s own department', async () => {
+    // Isolated medication so this doesn't perturb the stock/threshold numbers
+    // the rest of this describe block depends on.
+    const create = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_dept_ignore`,
+      currentStock: 10,
+      department: DEPT,
+    });
+    const isolatedId = create.body.medication.medicationId;
+
+    const res = await auth(request(app).post(`/api/medications/${isolatedId}/withdraw`)).send({
+      quantity: 1,
+      department: 'SomeOtherDept',
+    });
+    expect(res.status).toBe(200);
+
+    const { rows } = await pool.query(
+      'SELECT department FROM withdrawal_transactions WHERE medication_id = $1 ORDER BY created_at DESC LIMIT 1',
+      [isolatedId]
+    );
+    expect(rows[0].department).toBe(DEPT);
+
+    await pool.query('DELETE FROM withdrawal_transactions WHERE medication_id = $1', [isolatedId]);
+    await pool.query('DELETE FROM medications WHERE medication_id = $1', [isolatedId]);
   });
 
   test('withdraw enough to cross the alert threshold flips status to yellow', async () => {
@@ -82,14 +107,12 @@ describe('Medications flow', () => {
     // Withdraw down to stock=3: daysRemaining=3/0.833=3.6 <= 5 -> yellow.
     let res = await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 15,
-      department: DEPT,
     });
     expect(res.status).toBe(200);
     expect(res.body.medication.currentStock).toBe(5);
 
     res = await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 2,
-      department: DEPT,
     });
     expect(res.status).toBe(200);
     expect(res.body.medication.currentStock).toBe(3);
@@ -102,7 +125,6 @@ describe('Medications flow', () => {
 
     const res = await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 999999,
-      department: DEPT,
     });
     expect(res.status).toBe(400);
 
@@ -126,7 +148,6 @@ describe('Medications flow', () => {
     // Push it back into yellow territory first.
     await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 490,
-      department: DEPT,
     });
 
     let alertsRes = await auth(request(app).get('/api/medications/alerts'));
@@ -144,7 +165,6 @@ describe('Medications flow', () => {
   test('reject invalid withdraw payload (non-positive quantity)', async () => {
     const res = await auth(request(app).post(`/api/medications/${medicationId}/withdraw`)).send({
       quantity: 0,
-      department: DEPT,
     });
     expect(res.status).toBe(400);
   });

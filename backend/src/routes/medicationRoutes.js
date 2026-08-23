@@ -27,7 +27,7 @@ router.delete('/:id', [param('id').isInt()], asyncHandler(medicationController.r
 
 router.post(
   '/:id/withdraw',
-  [param('id').isInt(), body('quantity').isInt({ min: 1 }), body('department').optional().trim()],
+  [param('id').isInt(), body('quantity').isInt({ min: 1 })],
   asyncHandler(medicationController.withdraw)
 );
 

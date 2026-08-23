@@ -12,7 +12,7 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSubmit(Number(quantity), department);
+    onSubmit(Number(quantity), isWithdraw ? undefined : department);
   }
 
   function handleClose() {
@@ -41,18 +41,20 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
           />
         </div>
 
-        <div>
-          <label htmlFor="department" className="block text-sm font-medium text-slate-700">
-            Department
-          </label>
-          <input
-            id="department"
-            type="text"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          />
-        </div>
+        {!isWithdraw && (
+          <div>
+            <label htmlFor="department" className="block text-sm font-medium text-slate-700">
+              Department
+            </label>
+            <input
+              id="department"
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            />
+          </div>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
