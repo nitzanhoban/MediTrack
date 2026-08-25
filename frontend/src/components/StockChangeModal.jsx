@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import Modal from './Modal';
 
-/** Shared form for both Withdraw and Restock — CLAUDE.md describes both as
- * "select medication + quantity in the modal". */
 export default function StockChangeModal({ open, onClose, medication, mode, onSubmit, submitting, error }) {
   const [quantity, setQuantity] = useState('');
-  const [department, setDepartment] = useState(medication?.department || '');
 
   if (!medication) return null;
 
@@ -14,7 +11,7 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSubmit(Number(quantity), department);
+    onSubmit(Number(quantity));
   }
 
   function handleClose() {
@@ -25,11 +22,13 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
   return (
     <Modal open={open} onClose={handleClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-slate-500">Current stock: {medication.currentStock}</p>
+        <p className="text-sm text-slate-500">
+          Current stock: {medication.currentStock} {medication.unit}
+        </p>
 
         <div>
           <label htmlFor="quantity" className="block text-sm font-medium text-slate-700">
-            Quantity
+            Quantity ({medication.unit})
           </label>
           <input
             id="quantity"
@@ -40,19 +39,6 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
             onChange={(e) => setQuantity(e.target.value)}
             className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             autoFocus
-          />
-        </div>
-
-        <div>
-          <label htmlFor="department" className="block text-sm font-medium text-slate-700">
-            Department
-          </label>
-          <input
-            id="department"
-            type="text"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
           />
         </div>
 

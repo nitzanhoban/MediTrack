@@ -1,16 +1,53 @@
 const WINDOW_DAYS = 30;
 
+const StockStatus = {
+  RED: 'red',
+  YELLOW: 'yellow',
+  GREEN: 'green',
+};
+
+/**
+ * Ordered status rules — evaluated top to bottom, first match wins.
+ *
+ * This is the open/closed extension point for classification: to add a new
+ * status (a new color, a new urgency tier, whatever), add a rule object
+ * here. Nothing else in this file — `predictShortage`, the daily-rate/
+ * days-remaining math, or any caller — needs to change. Order matters:
+ * put more urgent/specific rules before more general ones, and always
+ * keep a catch-all rule last so classification can never fall through
+ * with no status.
+ *
+ * Each rule receives the same context object `predictShortage` computes:
+ * { currentStock, alertThresholdDays, dailyRate, daysRemaining }.
+ */
+const STATUS_RULES = [
+  {
+    status: StockStatus.RED,
+    matches: ({ currentStock }) => currentStock <= 0,
+  },
+  {
+    status: StockStatus.YELLOW,
+    matches: ({ currentStock, daysRemaining, alertThresholdDays }) =>
+      currentStock > 0 && daysRemaining !== null && daysRemaining <= alertThresholdDays,
+  },
+  {
+    status: StockStatus.GREEN,
+    matches: () => true, // catch-all — must stay last
+  },
+];
+
+function classifyStatus(context) {
+  const rule = STATUS_RULES.find((r) => r.matches(context));
+  return rule.status;
+}
+
 /**
  * Moving-average shortage prediction (CLAUDE.md section 8).
  *
  * 1. Sum withdrawals over the last 30 days.
  * 2. Divide by 30 -> average daily consumption rate.
  * 3. current_stock / rate -> days remaining until stockout.
- * 4. Classify status:
- *      red    - out of stock (current_stock <= 0)
- *      yellow - stock > 0 and days_remaining <= alert_threshold_days
- *      green  - otherwise (including zero/undetermined consumption, i.e.
- *               no withdrawals in the window -> nothing to predict from)
+ * 4. Classify status via STATUS_RULES (see above).
  *
  * `totalWithdrawn30d` is the sum of `quantity` for transaction_type='withdrawal'
  * in the last 30 days, computed by the caller (SQL aggregate) and passed in here
@@ -24,14 +61,7 @@ function predictShortage({ currentStock, alertThresholdDays, totalWithdrawn30d }
     daysRemaining = currentStock / dailyRate;
   }
 
-  let status;
-  if (currentStock <= 0) {
-    status = 'red';
-  } else if (daysRemaining !== null && daysRemaining <= alertThresholdDays) {
-    status = 'yellow';
-  } else {
-    status = 'green';
-  }
+  const status = classifyStatus({ currentStock, alertThresholdDays, dailyRate, daysRemaining });
 
   return {
     dailyRate,
@@ -40,4 +70,4 @@ function predictShortage({ currentStock, alertThresholdDays, totalWithdrawn30d }
   };
 }
 
-module.exports = { predictShortage, WINDOW_DAYS };
+module.exports = { predictShortage, WINDOW_DAYS, StockStatus, STATUS_RULES };

@@ -2,7 +2,10 @@ const { validationResult } = require('express-validator');
 const { withTransaction } = require('../config/db');
 const medicationModel = require('../models/medicationModel');
 const transactionModel = require('../models/transactionModel');
-const { predictShortage } = require('../algorithm/shortagePrediction');
+const { predictShortage, StockStatus } = require('../algorithm/shortagePrediction');
+
+const DUPLICATE_NAME_ERROR = 'A medication with this name already exists';
+const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 function serialize(med) {
   const prediction = predictShortage({
@@ -14,6 +17,7 @@ function serialize(med) {
     medicationId: med.medication_id,
     name: med.name,
     currentStock: med.current_stock,
+    unit: med.unit,
     alertThresholdDays: med.alert_threshold_days,
     department: med.department,
     status: prediction.status,
@@ -35,10 +39,9 @@ async function departments(req, res) {
   return res.json({ departments: depts });
 }
 
-/** Alerts panel: active medications currently in yellow or red. */
 async function alerts(req, res) {
   const meds = await medicationModel.listActive({});
-  const serialized = meds.map(serialize).filter((m) => m.status !== 'green');
+  const serialized = meds.map(serialize).filter((m) => m.status !== StockStatus.GREEN);
   return res.json({ alerts: serialized });
 }
 
@@ -48,17 +51,35 @@ async function create(req, res) {
     return res.status(400).json({ error: 'Validation failed', details: errors.array() });
   }
 
-  const { name, currentStock = 0, alertThresholdDays = 5, department } = req.body;
-  const med = await medicationModel.create({
-    name,
-    currentStock,
-    alertThresholdDays,
-    department: department || null,
-    status: currentStock <= 0 ? 'red' : 'green',
-  });
+  const { name, currentStock = 0, unit, alertThresholdDays = 5, department } = req.body;
 
-  const full = await medicationModel.getActiveById(med.medication_id);
-  return res.status(201).json({ medication: serialize(full) });
+  const existing = await medicationModel.getActiveByName(name);
+  if (existing) {
+    return res.status(409).json({ error: DUPLICATE_NAME_ERROR });
+  }
+
+  try {
+    const med = await medicationModel.create({
+      name,
+      currentStock,
+      unit,
+      alertThresholdDays,
+      department: department || null,
+      status: currentStock <= 0 ? StockStatus.RED : StockStatus.GREEN,
+    });
+
+    const full = await medicationModel.getActiveById(med.medication_id);
+    return res.status(201).json({ medication: serialize(full) });
+  } catch (err) {
+    // Defense-in-depth against the pre-check's TOCTOU race: two concurrent
+    // creates for the same name could both pass getActiveByName before
+    // either insert commits. The DB's partial unique index is the real
+    // backstop; this just turns that violation into the same friendly 409.
+    if (err.code === POSTGRES_UNIQUE_VIOLATION) {
+      return res.status(409).json({ error: DUPLICATE_NAME_ERROR });
+    }
+    throw err;
+  }
 }
 
 async function remove(req, res) {
@@ -70,11 +91,7 @@ async function remove(req, res) {
   return res.status(204).send();
 }
 
-/**
- * Shared handler for withdraw/restock: locks the row, applies the quantity
- * delta, records a transaction, recomputes status, all inside one DB
- * transaction with rollback on failure (CLAUDE.md section 7).
- */
+
 async function applyStockChange(req, res, { type, sign }) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -82,7 +99,7 @@ async function applyStockChange(req, res, { type, sign }) {
   }
 
   const { id } = req.params;
-  const { quantity, department } = req.body;
+  const { quantity } = req.body;
 
   try {
     const updated = await withTransaction(async (client) => {
@@ -104,11 +121,10 @@ async function applyStockChange(req, res, { type, sign }) {
         medicationId: id,
         userId: req.user.id,
         quantity,
-        department: department || med.department,
+        department: med.department,
         type,
       });
 
-      // total_withdrawn_30d must reflect the transaction we just inserted.
       const total30d = await transactionModel.sumWithdrawals30d(id);
       const prediction = predictShortage({
         currentStock: newStock,

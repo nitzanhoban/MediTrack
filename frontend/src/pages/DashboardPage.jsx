@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import MedicineBottleIcon from '../components/icons/MedicineBottleIcon';
 import { useAuth } from '../context/AuthContext';
 import * as medsApi from '../api/medications';
 import MedicationTile from '../components/MedicationTile';
@@ -13,6 +15,8 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
 
   const [department, setDepartment] = useState('');
+  const [status, setStatus] = useState('');
+  const [search, setSearch] = useState('');
   const [stockModal, setStockModal] = useState(null); // { medication, mode: 'withdraw'|'restock' }
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -31,7 +35,7 @@ export default function DashboardPage() {
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
     queryFn: medsApi.listAlerts,
-    refetchInterval: 60_000, // keep the alerts panel fresh without manual action
+    refetchInterval: 60_000, 
   });
 
   function invalidateAll() {
@@ -41,7 +45,7 @@ export default function DashboardPage() {
   }
 
   const withdrawMutation = useMutation({
-    mutationFn: ({ id, quantity, dept }) => medsApi.withdrawMedication(id, quantity, dept),
+    mutationFn: ({ id, quantity }) => medsApi.withdrawMedication(id, quantity),
     onSuccess: () => {
       invalidateAll();
       setStockModal(null);
@@ -51,7 +55,7 @@ export default function DashboardPage() {
   });
 
   const restockMutation = useMutation({
-    mutationFn: ({ id, quantity, dept }) => medsApi.restockMedication(id, quantity, dept),
+    mutationFn: ({ id, quantity }) => medsApi.restockMedication(id, quantity),
     onSuccess: () => {
       invalidateAll();
       setStockModal(null);
@@ -84,6 +88,13 @@ export default function DashboardPage() {
   const departments = departmentsQuery.data || [];
   const alerts = alertsQuery.data || [];
 
+  const filteredMedications = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return medications
+      .filter((m) => !query || m.name.toLowerCase().includes(query))
+      .filter((m) => !status || m.status === status);
+  }, [medications, search, status]);
+
   const activeMutation = useMemo(() => {
     if (stockModal?.mode === 'withdraw') return withdrawMutation;
     if (stockModal?.mode === 'restock') return restockMutation;
@@ -91,20 +102,19 @@ export default function DashboardPage() {
   }, [stockModal, withdrawMutation, restockMutation]);
 
   return (
-    <div className="min-h-screen bg-slate-100 pb-12">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">MediTrack Dashboard</h1>
-            <p className="text-xs text-slate-500">Signed in as {user?.username} ({user?.role})</p>
+    <div className="flex min-h-screen flex-col bg-slate-100 pb-12 lg:h-screen lg:overflow-hidden lg:pb-0">
+      <header className="shrink-0 border-b border-slate-200 bg-white shadow-sm">
+        <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-sm">
+              <MedicineBottleIcon className="h-6 w-6" />
+            </span>
+            <div>
+              <h1 className="text-lg font-bold leading-tight tracking-tight text-slate-900">MediTrack</h1>
+              <p className="text-xs text-slate-500">Signed in as {user?.username} ({user?.role})</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
-            >
-              New medication
-            </button>
             <button
               onClick={() => logout()}
               className="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
@@ -115,9 +125,26 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto mt-6 flex max-w-6xl flex-col gap-6 px-4 lg:flex-row">
-        <div className="flex-1">
-          <div className="mb-4 flex items-center gap-3">
+      <main className="flex w-full flex-col gap-6 px-4 pt-6 sm:px-6 lg:min-h-0 lg:flex-1 lg:flex-row lg:px-8">
+        <div className="flex flex-col lg:min-h-0 lg:flex-1">
+          <div className="mb-5 shrink-0">
+            <label htmlFor="name-search" className="sr-only">
+              Search medications
+            </label>
+            <div className="relative">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <input
+                id="name-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by medication name…"
+                className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+          </div>
+
+          <div className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
             <label htmlFor="dept-filter" className="text-sm font-medium text-slate-700">
               Department
             </label>
@@ -134,39 +161,70 @@ export default function DashboardPage() {
                 </option>
               ))}
             </select>
+
+            <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">
+              Status
+            </label>
+            <select
+              id="status-filter"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            >
+              <option value="">All statuses</option>
+              <option value="green">Green — sufficient stock</option>
+              <option value="yellow">Yellow — predicted shortage</option>
+              <option value="red">Red — out of stock</option>
+            </select>
+
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="ml-auto flex items-center justify-center gap-1.5 rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-500"
+            >
+              <PlusIcon className="h-4 w-4" />
+              New medication
+            </button>
           </div>
 
-          {medicationsQuery.isLoading && <p className="text-sm text-slate-500">Loading medications…</p>}
-          {medicationsQuery.isError && (
-            <p className="text-sm text-red-600">Failed to load medications. Try refreshing.</p>
-          )}
+          <div className="scroll-pane -mr-2 overflow-y-auto pb-6 pr-2 lg:min-h-0 lg:flex-1">
+            {medicationsQuery.isLoading && <p className="text-sm text-slate-500">Loading medications…</p>}
+            {medicationsQuery.isError && (
+              <p className="text-sm text-red-600">Failed to load medications. Try refreshing.</p>
+            )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {medications.map((med) => (
-              <MedicationTile
-                key={med.medicationId}
-                medication={med}
-                onWithdraw={(m) => {
-                  setActionError('');
-                  setStockModal({ medication: m, mode: 'withdraw' });
-                }}
-                onRestock={(m) => {
-                  setActionError('');
-                  setStockModal({ medication: m, mode: 'restock' });
-                }}
-                onDelete={(m) => {
-                  setActionError('');
-                  setDeleteTarget(m);
-                }}
-              />
-            ))}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {filteredMedications.map((med) => (
+                <MedicationTile
+                  key={med.medicationId}
+                  medication={med}
+                  onWithdraw={(m) => {
+                    setActionError('');
+                    setStockModal({ medication: m, mode: 'withdraw' });
+                  }}
+                  onRestock={(m) => {
+                    setActionError('');
+                    setStockModal({ medication: m, mode: 'restock' });
+                  }}
+                  onDelete={(m) => {
+                    setActionError('');
+                    setDeleteTarget(m);
+                  }}
+                />
+              ))}
+            </div>
+
+            {!medicationsQuery.isLoading && medications.length === 0 && (
+              <p className="mt-6 text-sm text-slate-500">
+                No medications yet. Use "New medication" to add the first one.
+              </p>
+            )}
+            {!medicationsQuery.isLoading && medications.length > 0 && filteredMedications.length === 0 && (
+              <p className="mt-6 text-sm text-slate-500">
+                No medications match the current filters
+                {search ? ` (search: "${search}")` : ''}.
+              </p>
+            )}
           </div>
-
-          {!medicationsQuery.isLoading && medications.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">
-              No medications yet. Use "New medication" to add the first one.
-            </p>
-          )}
         </div>
 
         <AlertsPanel alerts={alerts} isLoading={alertsQuery.isLoading} />
@@ -179,12 +237,12 @@ export default function DashboardPage() {
         mode={stockModal?.mode}
         submitting={activeMutation?.isPending}
         error={actionError}
-        onSubmit={(quantity, dept) => {
+        onSubmit={(quantity) => {
           const id = stockModal.medication.medicationId;
           if (stockModal.mode === 'withdraw') {
-            withdrawMutation.mutate({ id, quantity, dept });
+            withdrawMutation.mutate({ id, quantity });
           } else {
-            restockMutation.mutate({ id, quantity, dept });
+            restockMutation.mutate({ id, quantity });
           }
         }}
       />

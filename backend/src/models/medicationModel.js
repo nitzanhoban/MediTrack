@@ -5,6 +5,7 @@ const BASE_SELECT_WITH_30D = `
     m.medication_id,
     m.name,
     m.current_stock,
+    m.unit,
     m.alert_threshold_days,
     m.status,
     m.department,
@@ -22,7 +23,6 @@ const BASE_SELECT_WITH_30D = `
   ) w ON w.medication_id = m.medication_id
 `;
 
-/** List active medications, each annotated with its trailing-30-day withdrawal total. */
 async function listActive({ department } = {}) {
   const params = [];
   let where = 'WHERE m.is_active = TRUE';
@@ -45,7 +45,6 @@ async function getActiveById(medicationId) {
   return rows[0] || null;
 }
 
-/** Row lock variant for use inside a transaction (withdraw/restock). */
 async function getForUpdate(client, medicationId) {
   const { rows } = await client.query(
     `SELECT medication_id, name, current_stock, alert_threshold_days, status, department, is_active
@@ -64,17 +63,26 @@ async function listDistinctDepartments() {
   return rows.map((r) => r.department);
 }
 
-async function create({ name, currentStock, alertThresholdDays, department, status }) {
+/** Used to pre-check the active-name uniqueness rule before insert (see
+ * idx_medications_unique_active_name in schema.sql, the DB-level backstop). */
+async function getActiveByName(name) {
   const { rows } = await pool.query(
-    `INSERT INTO medications (name, current_stock, alert_threshold_days, department, status)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING medication_id, name, current_stock, alert_threshold_days, status, department, is_active, created_at, updated_at`,
-    [name, currentStock, alertThresholdDays, department, status]
+    `SELECT medication_id FROM medications WHERE is_active = TRUE AND name = $1`,
+    [name]
+  );
+  return rows[0] || null;
+}
+
+async function create({ name, currentStock, unit, alertThresholdDays, department, status }) {
+  const { rows } = await pool.query(
+    `INSERT INTO medications (name, current_stock, unit, alert_threshold_days, department, status)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING medication_id, name, current_stock, unit, alert_threshold_days, status, department, is_active, created_at, updated_at`,
+    [name, currentStock, unit, alertThresholdDays, department, status]
   );
   return rows[0];
 }
 
-/** Update stock + status for a medication, inside a transaction. */
 async function updateStock(client, medicationId, { currentStock, status }) {
   const { rows } = await client.query(
     `UPDATE medications
@@ -86,7 +94,6 @@ async function updateStock(client, medicationId, { currentStock, status }) {
   return rows[0];
 }
 
-/** Update just status (used by the daily background recompute job — no stock change). */
 async function updateStatus(medicationId, status) {
   await pool.query(
     `UPDATE medications SET status = $2, updated_at = NOW() WHERE medication_id = $1`,
@@ -109,6 +116,7 @@ module.exports = {
   getActiveById,
   getForUpdate,
   listDistinctDepartments,
+  getActiveByName,
   create,
   updateStock,
   updateStatus,

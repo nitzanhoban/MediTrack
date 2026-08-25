@@ -6,8 +6,7 @@ export default function DeleteConfirmModal({ open, onClose, medication, onConfir
   return (
     <Modal open={open} onClose={onClose} title="Delete medication">
       <p className="text-sm text-slate-600">
-        Remove <span className="font-medium">{medication.name}</span> from the dashboard? This is for
-        defective or expired stock — transaction history is kept for audit, but the tile will disappear.
+        Remove <span className="font-medium">{medication.name}</span> from the dashboard?
       </p>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
