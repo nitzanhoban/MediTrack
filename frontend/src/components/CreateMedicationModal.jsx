@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import Modal from './Modal';
+import { MEDICATION_UNITS } from '../constants/units';
 
 export default function CreateMedicationModal({ open, onClose, onSubmit, submitting, error }) {
   const [name, setName] = useState('');
   const [currentStock, setCurrentStock] = useState('0');
+  const [unit, setUnit] = useState('');
   const [alertThresholdDays, setAlertThresholdDays] = useState('5');
   const [department, setDepartment] = useState('');
 
@@ -12,6 +14,7 @@ export default function CreateMedicationModal({ open, onClose, onSubmit, submitt
     onSubmit({
       name,
       currentStock: Number(currentStock),
+      unit,
       alertThresholdDays: Number(alertThresholdDays),
       department: department || undefined,
     });
@@ -20,6 +23,7 @@ export default function CreateMedicationModal({ open, onClose, onSubmit, submitt
   function handleClose() {
     setName('');
     setCurrentStock('0');
+    setUnit('');
     setAlertThresholdDays('5');
     setDepartment('');
     onClose();
@@ -60,19 +64,41 @@ export default function CreateMedicationModal({ open, onClose, onSubmit, submitt
             />
           </div>
           <div>
-            <label htmlFor="med-threshold" className="block text-sm font-medium text-slate-700">
-              Alert threshold (days)
+            <label htmlFor="med-unit" className="block text-sm font-medium text-slate-700">
+              Unit
             </label>
-            <input
-              id="med-threshold"
-              type="number"
-              min={1}
+            <select
+              id="med-unit"
               required
-              value={alertThresholdDays}
-              onChange={(e) => setAlertThresholdDays(e.target.value)}
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
               className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
+            >
+              <option value="" disabled>
+                Select a unit…
+              </option>
+              {MEDICATION_UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="med-threshold" className="block text-sm font-medium text-slate-700">
+            Alert threshold (days)
+          </label>
+          <input
+            id="med-threshold"
+            type="number"
+            min={1}
+            required
+            value={alertThresholdDays}
+            onChange={(e) => setAlertThresholdDays(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
         </div>
 
         <div>

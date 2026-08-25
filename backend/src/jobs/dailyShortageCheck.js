@@ -20,7 +20,6 @@ async function runDailyShortageCheck() {
     }
   }
 
-  console.log(`dailyShortageCheck- checked ${meds.length} medications, ${changed} status changes`);
   return { checked: meds.length, changed };
 }
 

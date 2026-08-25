@@ -24,7 +24,10 @@ export default function MedicationTile({ medication, onWithdraw, onRestock, onDe
             {STATUS_LABEL[medication.status]}
           </span>
         </div>
-        <p className="mt-2 text-5xl font-bold">{medication.currentStock}</p>
+        <p className="mt-2 flex items-baseline gap-2">
+          <span className="text-5xl font-bold">{medication.currentStock}</span>
+          <span className="text-xl font-medium opacity-70">{medication.unit}</span>
+        </p>
         <p className="truncate text-base opacity-80">
           {medication.department || 'No department'}
           {medication.daysRemaining !== null && ` · ~${Math.floor(medication.daysRemaining)}d remaining`}

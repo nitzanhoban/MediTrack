@@ -55,13 +55,19 @@ In `backend/.env`, set `DATABASE_URL` to match the role/password/db you created 
 
 ## 4. (Optional) Seed dev data
 
-Creates two test users and a handful of sample medications:
+Creates two test users (no sample medications — the dashboard only ever shows real, user-created data by default):
 
 ```
 npm run --workspace=backend db:seed
 ```
 
 Dev login after seeding: `pharmacist1` / `password123` (or `admin` / `password123`).
+
+Want a quick demo fill of sample medications instead of creating them by hand through the UI? Run this separately:
+
+```
+npm run --workspace=backend db:seed:demo-medications
+```
 
 ## 5. Run it
 

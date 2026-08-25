@@ -22,11 +22,13 @@ export default function StockChangeModal({ open, onClose, medication, mode, onSu
   return (
     <Modal open={open} onClose={handleClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-slate-500">Current stock: {medication.currentStock}</p>
+        <p className="text-sm text-slate-500">
+          Current stock: {medication.currentStock} {medication.unit}
+        </p>
 
         <div>
           <label htmlFor="quantity" className="block text-sm font-medium text-slate-700">
-            Quantity
+            Quantity ({medication.unit})
           </label>
           <input
             id="quantity"

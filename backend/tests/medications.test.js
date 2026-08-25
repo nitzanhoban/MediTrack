@@ -35,19 +35,42 @@ describe('Medications flow', () => {
     const res = await auth(request(app).post('/api/medications')).send({
       name: MED_NAME,
       currentStock: 30,
+      unit: 'vials',
       alertThresholdDays: 5,
       department: DEPT,
     });
 
     expect(res.status).toBe(201);
-    expect(res.body.medication).toMatchObject({ name: MED_NAME, currentStock: 30, status: 'green' });
+    expect(res.body.medication).toMatchObject({ name: MED_NAME, currentStock: 30, unit: 'vials', status: 'green' });
     medicationId = res.body.medication.medicationId;
+  });
+
+  test('create medication without a unit is rejected with 400 (unit is required, no default)', async () => {
+    const res = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_no_unit`,
+      currentStock: 5,
+      department: DEPT,
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  test('create medication rejects an unrecognized unit', async () => {
+    const res = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_bad_unit`,
+      currentStock: 5,
+      unit: 'gallons',
+      department: DEPT,
+    });
+
+    expect(res.status).toBe(400);
   });
 
   test('create medication with zero initial stock -> red', async () => {
     const res = await auth(request(app).post('/api/medications')).send({
       name: `${MED_NAME}_zero`,
       currentStock: 0,
+      unit: 'tablets',
       department: DEPT,
     });
 
@@ -56,6 +79,41 @@ describe('Medications flow', () => {
 
     // clean up this one immediately, it's not tracked by the outer medicationId
     await pool.query('DELETE FROM medications WHERE medication_id = $1', [res.body.medication.medicationId]);
+  });
+
+  test('create medication rejects a duplicate name among active medications', async () => {
+    const res = await auth(request(app).post('/api/medications')).send({
+      name: MED_NAME, // same name as the medication created in the first test
+      currentStock: 5,
+      unit: 'tablets',
+      department: DEPT,
+    });
+
+    expect(res.status).toBe(409);
+  });
+
+  test('a soft-deleted medication\'s name can be reused by a new medication', async () => {
+    const create = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_reuse`,
+      currentStock: 5,
+      unit: 'tablets',
+      department: DEPT,
+    });
+    expect(create.status).toBe(201);
+    const firstId = create.body.medication.medicationId;
+
+    const del = await auth(request(app).delete(`/api/medications/${firstId}`));
+    expect(del.status).toBe(204);
+
+    const recreate = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_reuse`,
+      currentStock: 8,
+      unit: 'boxes',
+      department: DEPT,
+    });
+    expect(recreate.status).toBe(201);
+
+    await pool.query('DELETE FROM medications WHERE medication_id = $1', [recreate.body.medication.medicationId]);
   });
 
   test('list includes the newly created medication, filterable by department', async () => {
@@ -80,6 +138,7 @@ describe('Medications flow', () => {
     const create = await auth(request(app).post('/api/medications')).send({
       name: `${MED_NAME}_dept_ignore`,
       currentStock: 10,
+      unit: 'tablets',
       department: DEPT,
     });
     const isolatedId = create.body.medication.medicationId;
