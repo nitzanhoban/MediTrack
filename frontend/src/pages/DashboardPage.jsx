@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const [department, setDepartment] = useState('');
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
-  const [stockModal, setStockModal] = useState(null); // { medication, mode: 'withdraw'|'restock' }
+  const [stockModal, setStockModal] = useState(null); 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [actionError, setActionError] = useState('');

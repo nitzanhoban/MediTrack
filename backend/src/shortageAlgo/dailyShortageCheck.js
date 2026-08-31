@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const medicationModel = require('../models/medicationModel');
 const transactionModel = require('../models/transactionModel');
-const { predictShortage } = require('../algorithm/shortagePrediction');
+const { predictShortage } = require('./shortagePrediction');
 
 async function runDailyShortageCheck() {
   const meds = await medicationModel.listActive({});

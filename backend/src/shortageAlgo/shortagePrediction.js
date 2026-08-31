@@ -1,25 +1,7 @@
+const { StockStatus } = require('../utils/consts');
+
 const WINDOW_DAYS = 30;
 
-const StockStatus = {
-  RED: 'red',
-  YELLOW: 'yellow',
-  GREEN: 'green',
-};
-
-/**
- * Ordered status rules — evaluated top to bottom, first match wins.
- *
- * This is the open/closed extension point for classification: to add a new
- * status (a new color, a new urgency tier, whatever), add a rule object
- * here. Nothing else in this file — `predictShortage`, the daily-rate/
- * days-remaining math, or any caller — needs to change. Order matters:
- * put more urgent/specific rules before more general ones, and always
- * keep a catch-all rule last so classification can never fall through
- * with no status.
- *
- * Each rule receives the same context object `predictShortage` computes:
- * { currentStock, alertThresholdDays, dailyRate, daysRemaining }.
- */
 const STATUS_RULES = [
   {
     status: StockStatus.RED,
@@ -32,7 +14,7 @@ const STATUS_RULES = [
   },
   {
     status: StockStatus.GREEN,
-    matches: () => true, // catch-all — must stay last
+    matches: () => true,
   },
 ];
 
@@ -56,7 +38,8 @@ function classifyStatus(context) {
 function predictShortage({ currentStock, alertThresholdDays, totalWithdrawn30d }) {
   const dailyRate = totalWithdrawn30d / WINDOW_DAYS;
 
-  let daysRemaining = null; // null = cannot be determined (no consumption history)
+  let daysRemaining = null; 
+
   if (dailyRate > 0) {
     daysRemaining = currentStock / dailyRate;
   }
@@ -70,4 +53,4 @@ function predictShortage({ currentStock, alertThresholdDays, totalWithdrawn30d }
   };
 }
 
-module.exports = { predictShortage, WINDOW_DAYS, StockStatus, STATUS_RULES };
+module.exports = { predictShortage, STATUS_RULES };
