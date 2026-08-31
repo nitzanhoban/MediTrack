@@ -2,9 +2,9 @@ const { validationResult } = require('express-validator');
 const { withTransaction } = require('../config/db');
 const medicationModel = require('../models/medicationModel');
 const transactionModel = require('../models/transactionModel');
-const { predictShortage, StockStatus } = require('../algorithm/shortagePrediction');
+const { predictShortage } = require('../shortageAlgo/shortagePrediction');
+const { StockStatus, WITHDRAWAL, RESTOCK } = require('../utils/consts');
 
-const DUPLICATE_NAME_ERROR = 'A medication with this name already exists';
 const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 function serialize(med) {
@@ -46,6 +46,8 @@ async function alerts(req, res) {
 }
 
 async function create(req, res) {
+  const DUPLICATE_NAME_ERROR = 'A medication with this name already exists';
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: 'Validation failed', details: errors.array() });

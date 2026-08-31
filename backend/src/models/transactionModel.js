@@ -1,7 +1,6 @@
 const { pool } = require('../config/db');
+const { WITHDRAWAL } = require('../utils/consts');
 
-const WITHDRAWAL = 'withdrawal';
-const RESTOCK = 'restock';
 
 async function insert(client, { medicationId, userId, quantity, department, type }) {
   const { rows } = await client.query(
@@ -25,4 +24,4 @@ async function sumWithdrawals30d(medicationId) {
   return rows[0].total;
 }
 
-module.exports = { insert, sumWithdrawals30d, WITHDRAWAL, RESTOCK };
+module.exports = { insert, sumWithdrawals30d };

@@ -1,4 +1,4 @@
-const { predictShortage, STATUS_RULES } = require('../src/algorithm/shortagePrediction');
+const { predictShortage, STATUS_RULES } = require('../src/shortageAlgo/shortagePrediction');
 
 describe('predictShortage', () => {
   test('red when out of stock, regardless of consumption history', () => {

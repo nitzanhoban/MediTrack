@@ -6,9 +6,6 @@ body {
   @apply bg-slate-100 text-slate-900;
 }
 
-/* Thin, unobtrusive scrollbar for independently-scrolling panes
-   (medication grid, alerts list) so each one scrolls on its own
-   instead of the whole page growing. */
 .scroll-pane {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;

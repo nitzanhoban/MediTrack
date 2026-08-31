@@ -3,7 +3,7 @@ const { body, param, query } = require('express-validator');
 const medicationController = require('../controllers/medicationController');
 const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
-const { MEDICATION_UNITS } = require('../constants/units');
+const { MEDICATION_UNITS } = require('../utils/consts');
 
 const router = Router();
 

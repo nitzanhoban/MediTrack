@@ -1,16 +1,5 @@
 import { MinusCircleIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
-
-const STATUS_STYLES = {
-  green: 'bg-status-greenBg border-status-green text-green-900',
-  yellow: 'bg-status-yellowBg border-status-yellow text-yellow-900',
-  red: 'bg-status-redBg border-status-red text-red-900',
-};
-
-const STATUS_LABEL = {
-  green: 'Sufficient stock',
-  yellow: 'Predicted shortage',
-  red: 'Out of stock',
-};
+import { STATUS_STYLES, STATUS_LABEL } from '../utils/consts';
 
 export default function MedicationTile({ medication, onWithdraw, onRestock, onDelete }) {
   const styles = STATUS_STYLES[medication.status] || STATUS_STYLES.green;
@@ -34,26 +23,23 @@ export default function MedicationTile({ medication, onWithdraw, onRestock, onDe
         </p>
       </div>
 
-      <div className="mt-4 flex justify-between gap-2 text-sm font-medium">
+      <div className="mt-4 flex flex-wrap justify-between gap-2 text-sm font-medium">
         <button
           onClick={() => onWithdraw(medication)}
-          className="flex items-center justify-center gap-1.5 rounded-md bg-white/70 px-3 py-2 hover:bg-white"
-        >
-          <MinusCircleIcon className="h-5 w-5" />
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-white/70 px-2 py-2 hover:bg-white">
+          <MinusCircleIcon className="h-5 w-5 shrink-0" />
           Withdraw
         </button>
         <button
           onClick={() => onRestock(medication)}
-          className="flex items-center justify-center gap-1.5 rounded-md bg-white/70 px-3 py-2 hover:bg-white"
-        >
-          <PlusCircleIcon className="h-5 w-5" />
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-white/70 px-2 py-2 hover:bg-white">
+          <PlusCircleIcon className="h-5 w-5 shrink-0" />
           Add stock
         </button>
         <button
           onClick={() => onDelete(medication)}
-          className="flex items-center justify-center gap-1.5 rounded-md bg-white/70 px-3 py-2 hover:bg-white"
-        >
-          <TrashIcon className="h-5 w-5" />
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-white/70 px-2 py-2 text-red-600 hover:bg-white hover:text-red-700">
+          <TrashIcon className="h-5 w-5 shrink-0" />
           Delete
         </button>
       </div>
