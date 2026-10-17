@@ -2,15 +2,17 @@ require('dotenv').config();
 
 function required(name, fallback) {
   const value = process.env[name] ?? fallback;
+
   if (value === undefined) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
+
   return value;
 }
 
 module.exports = {
   port: process.env.PORT || 4000,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv: process.env.NODE_ENV || 'dev',
   databaseUrl: required('DATABASE_URL'),
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET'),

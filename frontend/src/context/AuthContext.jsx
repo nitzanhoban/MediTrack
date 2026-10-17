@@ -6,7 +6,6 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  // 'loading' while we probe for an existing session via the refresh cookie.
   const [status, setStatus] = useState('loading');
 
   const clearSession = useCallback(() => {
@@ -19,7 +18,6 @@ export function AuthProvider({ children }) {
     setOnUnauthorized(clearSession);
   }, [clearSession]);
 
-  // On first load, try to silently resume a session from the refresh cookie.
   useEffect(() => {
     let cancelled = false;
     refreshAccessToken()
@@ -48,7 +46,6 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (username, password, role) => {
     await authApi.register(username, password, role);
-    // Registration doesn't log the user in automatically — send them to log in.
   }, []);
 
   const logout = useCallback(async () => {

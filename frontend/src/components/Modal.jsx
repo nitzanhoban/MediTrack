@@ -1,7 +1,6 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 
-/** Generic modal shell (Headless UI Dialog) shared by all Medication Management modals. */
 export default function Modal({ open, onClose, title, children }) {
   return (
     <Transition show={open} as={Fragment}>

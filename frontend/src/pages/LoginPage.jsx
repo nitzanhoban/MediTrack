@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MedicineBottleIcon from '../components/icons/MedicineBottleIcon';
 
 export default function LoginPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('pharmacist');
@@ -44,8 +45,13 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
-        <h1 className="text-xl font-semibold text-slate-900">MediTrack</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-sm">
+            <MedicineBottleIcon className="h-6 w-6" />
+          </span>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">MediTrack</h1>
+        </div>
+        <p className="mt-3 text-sm text-slate-500">
           {isRegister ? 'Create your first-time account' : 'Sign in to the pharmacist dashboard'}
         </p>
 

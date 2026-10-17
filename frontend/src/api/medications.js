@@ -14,12 +14,8 @@ export const createMedication = (payload) =>
 export const deleteMedication = (medicationId) =>
   api.delete(`/medications/${medicationId}`).then((res) => res.data);
 
-export const withdrawMedication = (medicationId, quantity, department) =>
-  api
-    .post(`/medications/${medicationId}/withdraw`, { quantity, department })
-    .then((res) => res.data.medication);
+export const withdrawMedication = (medicationId, quantity) =>
+  api.post(`/medications/${medicationId}/withdraw`, { quantity }).then((res) => res.data.medication);
 
-export const restockMedication = (medicationId, quantity, department) =>
-  api
-    .post(`/medications/${medicationId}/restock`, { quantity, department })
-    .then((res) => res.data.medication);
+export const restockMedication = (medicationId, quantity) =>
+  api.post(`/medications/${medicationId}/restock`, { quantity }).then((res) => res.data.medication);

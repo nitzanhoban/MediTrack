@@ -21,13 +21,14 @@ function toPublicUser(user) {
 
 async function register(req, res) {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: 'Validation failed', details: errors.array() });
   }
 
   const { username, password, role } = req.body;
-
   const existing = await userModel.findByUsername(username);
+
   if (existing) {
     return res.status(409).json({ error: 'Username already taken' });
   }
@@ -44,17 +45,20 @@ async function register(req, res) {
 
 async function login(req, res) {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     return res.status(400).json({ error: 'Validation failed', details: errors.array() });
   }
 
   const { username, password } = req.body;
   const user = await userModel.findByUsername(username);
+
   if (!user) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
   const passwordOk = await bcrypt.compare(password, user.password_hash);
+
   if (!passwordOk) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
@@ -68,11 +72,13 @@ async function login(req, res) {
 
 async function refresh(req, res) {
   const token = req.cookies?.[REFRESH_COOKIE_NAME];
+
   if (!token) {
     return res.status(401).json({ error: 'Missing refresh token' });
   }
 
   let payload;
+
   try {
     payload = verifyRefreshToken(token);
   } catch (err) {
@@ -80,6 +86,7 @@ async function refresh(req, res) {
   }
 
   const user = await userModel.findById(payload.sub);
+  
   if (!user) {
     return res.status(401).json({ error: 'User no longer exists' });
   }

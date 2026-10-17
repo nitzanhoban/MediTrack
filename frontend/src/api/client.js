@@ -2,9 +2,6 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-// Access token lives in memory only (not localStorage), per CLAUDE.md's XSS
-// guidance — the refresh token is the one that persists, as an httpOnly cookie
-// the browser manages automatically.
 let accessToken = null;
 let onUnauthorized = null;
 
@@ -18,7 +15,7 @@ export function setOnUnauthorized(handler) {
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true, // send the httpOnly refresh cookie
+  withCredentials: true, 
 });
 
 api.interceptors.request.use((config) => {
