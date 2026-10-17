@@ -1,7 +1,3 @@
--- MediTrack schema
--- Per CLAUDE.md section 5, with one addition: medications.is_active (soft delete),
--- needed for the "Delete/remove medication" flow in section 7, which requires
--- transaction history to survive the delete for audit purposes.
 
 create table IF NOT EXISTS users (
     user_id       SERIAL PRIMARY KEY,
@@ -33,7 +29,7 @@ create table IF NOT EXISTS stock_transactions (
     user_id             INTEGER NOT NULL REFERENCES users(user_id),
     quantity            INTEGER NOT NULL CHECK (quantity > 0),
     department          VARCHAR(50),
-    transaction_type    VARCHAR(20) NOT NULL, -- withdrawal / restock
+    transaction_type    VARCHAR(20) NOT NULL,
     created_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

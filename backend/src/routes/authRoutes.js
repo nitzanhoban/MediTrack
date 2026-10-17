@@ -1,7 +1,6 @@
 const { Router } = require('express');
 const { body } = require('express-validator');
 const authController = require('../controllers/authController');
-const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = Router();
@@ -29,6 +28,5 @@ router.post(
 
 router.post('/refresh', asyncHandler(authController.refresh));
 router.post('/logout', asyncHandler(authController.logout));
-router.get('/me', requireAuth, asyncHandler(authController.me));
 
 module.exports = router;

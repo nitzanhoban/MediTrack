@@ -12,7 +12,7 @@ const REFRESH_COOKIE_OPTS = {
   secure: env.nodeEnv === 'production',
   sameSite: 'lax',
   path: '/api/auth',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days, matches JWT_REFRESH_EXPIRES_IN default
+  maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
 function toPublicUser(user) {
@@ -57,9 +57,9 @@ async function login(req, res) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
-  const passwordOk = await bcrypt.compare(password, user.password_hash);
+  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
-  if (!passwordOk) {
+  if (!isPasswordValid) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
@@ -103,12 +103,4 @@ async function logout(req, res) {
   return res.status(204).send();
 }
 
-async function me(req, res) {
-  const user = await userModel.findById(req.user.id);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-  return res.json({ user: toPublicUser(user) });
-}
-
-module.exports = { register, login, refresh, logout, me, REFRESH_COOKIE_NAME };
+module.exports = { register, login, refresh, logout, REFRESH_COOKIE_NAME };

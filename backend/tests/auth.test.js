@@ -65,9 +65,8 @@ describe('Auth flow', () => {
     const login = await request(app).post('/api/auth/login').send({ username: USERNAME, password: PASSWORD });
     const token = login.body.accessToken;
 
-    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+    const res = await request(app).get('/api/medications').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(res.body.user.username).toBe(USERNAME);
   });
 
   test('refresh issues a new access token from the refresh cookie', async () => {
@@ -77,6 +76,8 @@ describe('Auth flow', () => {
     const res = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toEqual(expect.any(String));
+    // The frontend restores the logged-in user from this response on page load.
+    expect(res.body.user.username).toBe(USERNAME);
   });
 
   test('logout clears the refresh cookie', async () => {

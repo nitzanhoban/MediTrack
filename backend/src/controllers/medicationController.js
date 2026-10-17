@@ -106,7 +106,7 @@ async function applyStockChange(req, res, { type, sign }) {
         throw notFound;
       }
 
-      const newStock = med.current_stock + sign * quantity;
+      const newStock = med.current_stock + (sign * quantity);
       if (newStock < 0) {
         const badRequest = new Error('Insufficient stock for this withdrawal');
         badRequest.status = 400;
@@ -144,7 +144,7 @@ async function applyStockChange(req, res, { type, sign }) {
   }
 }
 
-const withdraw = (req, res) => applyStockChange(req, res, { type: transactionModel.WITHDRAWAL, sign: -1 });
-const restock = (req, res) => applyStockChange(req, res, { type: transactionModel.RESTOCK, sign: 1 });
+const withdraw = (req, res) => applyStockChange(req, res, { type: WITHDRAWAL, sign: -1 });
+const restock = (req, res) => applyStockChange(req, res, { type: RESTOCK, sign: 1 });
 
-module.exports = { list, departments, alerts, create, remove, withdraw, restock, serialize };
+module.exports = { list, departments, alerts, create, remove, withdraw, restock };

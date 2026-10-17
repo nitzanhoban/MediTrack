@@ -21,7 +21,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
     refreshAccessToken()
-      .then(() => authApi.me())
       .then((data) => {
         if (!cancelled) {
           setUser(data.user);

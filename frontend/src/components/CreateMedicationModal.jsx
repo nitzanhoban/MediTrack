@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal';
-import { MEDICATION_UNITS } from '../utils/consts';
+import { MEDICATION_UNITS } from '../constants/consts';
 
 export default function CreateMedicationModal({ open, onClose, onSubmit, submitting, error }) {
   const [name, setName] = useState('');

@@ -1,5 +1,5 @@
 import { MinusCircleIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { STATUS_STYLES, STATUS_LABEL } from '../utils/consts';
+import { STATUS_STYLES, STATUS_LABEL } from '../constants/consts';
 
 export default function MedicationTile({ medication, onWithdraw, onRestock, onDelete }) {
   const styles = STATUS_STYLES[medication.status] || STATUS_STYLES.green;

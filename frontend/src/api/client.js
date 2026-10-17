@@ -9,6 +9,10 @@ export function setAccessToken(token) {
   accessToken = token;
 }
 
+export function getAccessToken() {
+  return accessToken;
+}
+
 export function setOnUnauthorized(handler) {
   onUnauthorized = handler;
 }
@@ -33,7 +37,7 @@ async function refreshAccessToken() {
       .post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true })
       .then((res) => {
         accessToken = res.data.accessToken;
-        return accessToken;
+        return res.data;
       })
       .finally(() => {
         refreshPromise = null;
@@ -51,7 +55,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry && !isAuthRoute) {
       original._retry = true;
       try {
-        const newToken = await refreshAccessToken();
+        const { accessToken: newToken } = await refreshAccessToken();
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       } catch (refreshErr) {
@@ -65,4 +69,4 @@ api.interceptors.response.use(
   }
 );
 
-export { refreshAccessToken };
+export { refreshAccessToken, BASE_URL };

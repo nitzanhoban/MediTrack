@@ -63,8 +63,6 @@ async function listDistinctDepartments() {
   return rows.map((r) => r.department);
 }
 
-/** Used to pre-check the active-name uniqueness rule before insert (see
- * idx_medications_unique_active_name in schema.sql, the DB-level backstop). */
 async function getActiveByName(name) {
   const { rows } = await pool.query(
     `SELECT medication_id FROM medications WHERE is_active = TRUE AND name = $1`,
