@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import MedicineBottleIcon from '../components/icons/MedicineBottleIcon';
@@ -35,8 +35,24 @@ export default function DashboardPage() {
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
     queryFn: medsApi.listAlerts,
-    refetchInterval: 60_000, 
   });
+
+  // The daily shortage job runs at 03:00 on the server; refetch shortly after it finishes.
+  useEffect(() => {
+    let timer;
+    function scheduleNextRefetch() {
+      const next = new Date();
+      next.setHours(3, 5, 0, 0);
+      if (next <= new Date()) next.setDate(next.getDate() + 1);
+      timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['medications'] });
+        queryClient.invalidateQueries({ queryKey: ['alerts'] });
+        scheduleNextRefetch();
+      }, next - new Date());
+    }
+    scheduleNextRefetch();
+    return () => clearTimeout(timer);
+  }, [queryClient]);
 
   function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: ['medications'] });

@@ -9,10 +9,6 @@ export function setAccessToken(token) {
   accessToken = token;
 }
 
-export function getAccessToken() {
-  return accessToken;
-}
-
 export function setOnUnauthorized(handler) {
   onUnauthorized = handler;
 }
@@ -69,4 +65,4 @@ api.interceptors.response.use(
   }
 );
 
-export { refreshAccessToken, BASE_URL };
+export { refreshAccessToken };
