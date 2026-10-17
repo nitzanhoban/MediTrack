@@ -13,8 +13,8 @@ async function insert(client, { medicationId, userId, quantity, department, type
   return rows[0];
 }
 
-async function sumWithdrawals30d(medicationId) {
-  const { rows } = await pool.query(
+async function sumWithdrawals30d(medicationId, client = pool) {
+  const { rows } = await client.query(
     `SELECT COALESCE(SUM(quantity), 0)::int AS total
      FROM withdrawal_transactions
      WHERE medication_id = $1

@@ -1,6 +1,13 @@
 const { pool } = require('../config/db');
 
 const BASE_SELECT_WITH_30D = `
+  WITH recent_withdrawals AS (
+    SELECT medication_id, SUM(quantity) AS total_30d
+    FROM withdrawal_transactions
+    WHERE transaction_type = 'withdrawal'
+      AND created_at >= NOW() - INTERVAL '30 days'
+    GROUP BY medication_id
+  )
   SELECT
     m.medication_id,
     m.name,
@@ -12,15 +19,9 @@ const BASE_SELECT_WITH_30D = `
     m.is_active,
     m.created_at,
     m.updated_at,
-    COALESCE(w.total_30d, 0)::int AS total_withdrawn_30d
+    COALESCE(r.total_30d, 0)::int AS total_withdrawn_30d
   FROM medications m
-  LEFT JOIN (
-    SELECT medication_id, SUM(quantity) AS total_30d
-    FROM withdrawal_transactions
-    WHERE transaction_type = 'withdrawal'
-      AND created_at >= NOW() - INTERVAL '30 days'
-    GROUP BY medication_id
-  ) w ON w.medication_id = m.medication_id
+  LEFT JOIN recent_withdrawals r ON r.medication_id = m.medication_id
 `;
 
 async function listActive({ department } = {}) {

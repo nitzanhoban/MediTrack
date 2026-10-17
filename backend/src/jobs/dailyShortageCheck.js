@@ -1,6 +1,5 @@
 const cron = require('node-cron');
 const medicationModel = require('../models/medicationModel');
-const transactionModel = require('../models/transactionModel');
 const { predictShortage } = require('../algorithm/shortagePrediction');
 
 async function runDailyShortageCheck() {
@@ -8,11 +7,10 @@ async function runDailyShortageCheck() {
   let changed = 0;
 
   for (const med of meds) {
-    const total30d = await transactionModel.sumWithdrawals30d(med.medication_id);
     const prediction = predictShortage({
       currentStock: med.current_stock,
       alertThresholdDays: med.alert_threshold_days,
-      totalWithdrawn30d: total30d,
+      totalWithdrawn30d: med.total_withdrawn_30d,
     });
     if (prediction.status !== med.status) {
       await medicationModel.updateStatus(med.medication_id, prediction.status);

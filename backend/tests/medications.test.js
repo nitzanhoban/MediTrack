@@ -185,6 +185,28 @@ describe('Medications flow', () => {
     expect(res.body.medication.status).toBe('yellow');
   });
 
+  test('persisted status includes the withdrawal that triggered the recalculation', async () => {
+    // Fresh medication, no history: withdrawing 9 of 10 gives total30d=9, dailyRate=0.3,
+    // daysRemaining=1/0.3=3.3 <= 5 -> yellow. If the 30-day sum ran outside the
+    // transaction it would miss this withdrawal (total30d=0) and store 'green'.
+    const created = await auth(request(app).post('/api/medications')).send({
+      name: `${MED_NAME}_persisted_status`,
+      currentStock: 10,
+      unit: 'tablets',
+      alertThresholdDays: 5,
+    });
+    const isolatedId = created.body.medication.medicationId;
+
+    const res = await auth(request(app).post(`/api/medications/${isolatedId}/withdraw`)).send({ quantity: 9 });
+    expect(res.status).toBe(200);
+
+    const { rows } = await pool.query('SELECT status FROM medications WHERE medication_id = $1', [isolatedId]);
+    expect(rows[0].status).toBe('yellow');
+
+    await pool.query('DELETE FROM withdrawal_transactions WHERE medication_id = $1', [isolatedId]);
+    await pool.query('DELETE FROM medications WHERE medication_id = $1', [isolatedId]);
+  });
+
   test('withdraw more than current stock is rejected with 400 and stock is unchanged', async () => {
     const before = await auth(request(app).get('/api/medications')).query({ department: DEPT });
     const stockBefore = before.body.medications.find((m) => m.medicationId === medicationId).currentStock;

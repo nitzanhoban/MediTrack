@@ -125,7 +125,7 @@ async function applyStockChange(req, res, { type, sign }) {
         type,
       });
 
-      const total30d = await transactionModel.sumWithdrawals30d(id);
+      const total30d = await transactionModel.sumWithdrawals30d(id, client);
       const prediction = predictShortage({
         currentStock: newStock,
         alertThresholdDays: med.alert_threshold_days,
