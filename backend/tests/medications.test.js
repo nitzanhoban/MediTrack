@@ -19,7 +19,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (medicationId) {
-    await pool.query('DELETE FROM withdrawal_transactions WHERE medication_id = $1', [medicationId]);
+    await pool.query('DELETE FROM stock_transactions WHERE medication_id = $1', [medicationId]);
     await pool.query('DELETE FROM medications WHERE medication_id = $1', [medicationId]);
   }
   await pool.query('DELETE FROM users WHERE username = $1', [USERNAME]);
@@ -156,13 +156,13 @@ describe('Medications flow', () => {
     expect(restockRes.status).toBe(200);
 
     const { rows } = await pool.query(
-      'SELECT department FROM withdrawal_transactions WHERE medication_id = $1 ORDER BY created_at ASC',
+      'SELECT department FROM stock_transactions WHERE medication_id = $1 ORDER BY created_at ASC',
       [isolatedId]
     );
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.department === DEPT)).toBe(true);
 
-    await pool.query('DELETE FROM withdrawal_transactions WHERE medication_id = $1', [isolatedId]);
+    await pool.query('DELETE FROM stock_transactions WHERE medication_id = $1', [isolatedId]);
     await pool.query('DELETE FROM medications WHERE medication_id = $1', [isolatedId]);
   });
 
@@ -244,7 +244,7 @@ describe('Medications flow', () => {
     expect(rows[0].is_active).toBe(false);
 
     const { rows: txRows } = await pool.query(
-      'SELECT COUNT(*)::int AS count FROM withdrawal_transactions WHERE medication_id = $1',
+      'SELECT COUNT(*)::int AS count FROM stock_transactions WHERE medication_id = $1',
       [medicationId]
     );
     expect(txRows[0].count).toBeGreaterThan(0);

@@ -16,7 +16,7 @@ const BASE_SELECT_WITH_30D = `
   FROM medications m
   LEFT JOIN (
     SELECT medication_id, SUM(quantity) AS total_30d
-    FROM withdrawal_transactions
+    FROM stock_transactions
     WHERE transaction_type = 'withdrawal'
       AND created_at >= NOW() - INTERVAL '30 days'
     GROUP BY medication_id

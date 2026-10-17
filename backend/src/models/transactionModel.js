@@ -4,7 +4,7 @@ const { WITHDRAWAL } = require('../utils/consts');
 
 async function insert(client, { medicationId, userId, quantity, department, type }) {
   const { rows } = await client.query(
-    `INSERT INTO withdrawal_transactions (medication_id, user_id, quantity, department, transaction_type)
+    `INSERT INTO stock_transactions (medication_id, user_id, quantity, department, transaction_type)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING transaction_id, medication_id, user_id, quantity, department, transaction_type, created_at`,
     [medicationId, userId, quantity, department, type]
@@ -15,7 +15,7 @@ async function insert(client, { medicationId, userId, quantity, department, type
 async function sumWithdrawals30d(medicationId) {
   const { rows } = await pool.query(
     `SELECT COALESCE(SUM(quantity), 0)::int AS total
-     FROM withdrawal_transactions
+     FROM stock_transactions
      WHERE medication_id = $1
        AND transaction_type = $2
        AND created_at >= NOW() - INTERVAL '30 days'`,

@@ -5,8 +5,6 @@ const transactionModel = require('../models/transactionModel');
 const { predictShortage } = require('../shortageAlgo/shortagePrediction');
 const { StockStatus, WITHDRAWAL, RESTOCK } = require('../utils/consts');
 
-const POSTGRES_UNIQUE_VIOLATION = '23505';
-
 function serialize(med) {
   const prediction = predictShortage({
     currentStock: med.current_stock,
@@ -73,12 +71,8 @@ async function create(req, res) {
     const full = await medicationModel.getActiveById(med.medication_id);
     return res.status(201).json({ medication: serialize(full) });
   } catch (err) {
-    // Defense-in-depth against the pre-check's TOCTOU race: two concurrent
-    // creates for the same name could both pass getActiveByName before
-    // either insert commits. The DB's partial unique index is the real
-    // backstop; this just turns that violation into the same friendly 409.
-    if (err.code === POSTGRES_UNIQUE_VIOLATION) {
-      return res.status(409).json({ error: DUPLICATE_NAME_ERROR });
+    if (err.status) {
+        return res.status(err.status).json({ error: err.message });
     }
     throw err;
   }
