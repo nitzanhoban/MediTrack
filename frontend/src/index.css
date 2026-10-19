@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-100 text-slate-900;
+}
+
+.scroll-pane {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.scroll-pane::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-pane::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+.scroll-pane::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
